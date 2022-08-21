@@ -1,0 +1,82 @@
+﻿Примечание: в заданиях нужно было “вывести пилотов” (без указания того, какую именно информацию о них необходимо вывести), поэтому во всех трех заданиях (для упрощения вывода информации) я указывала только имя
+
+
+
+
+Задача 1. Напишите запрос, который выведет пилотов, которые в качестве второго пилота в августе этого года трижды ездили в аэропорт Шереметьево. 
+
+
+SELECT 
+        p.name
+FROM 
+        flights as f
+LEFT JOIN
+        pilots as p
+        ON f.second_pilot_id = p.pilot_id
+WHERE
+        EXTRACT(MONTH FROM f.flight_dt) = 8
+        AND 
+        EXTRACT(YEAR FROM f.flight_dt) = 2022
+        AND
+        f.destination = 'Шереметьево'
+GROUP BY p.name
+HAVING COUNT(*) = 3;
+
+
+
+
+
+
+Задача 2. Выведите пилотов старше 45 лет, совершали полеты на самолетах с количеством пассажиров больше 30.
+
+
+SELECT p.name
+FROM flights as f
+LEFT JOIN 
+        pilots as p
+        ON f.first_pilot_id = p.pilot_id
+WHERE 
+        f.plane_id IN (SELECT plane_id
+                                   FROM planes
+                                   WHERE cargo_flg = 0)
+        AND 
+        f.quantity > 30
+        AND
+        p.age > 45
+UNION
+SELECT p.name
+FROM flights as f
+LEFT JOIN 
+        pilots as p
+        ON f.second_pilot_id = p.pilot_id
+WHERE 
+        f.plane_id IN (SELECT plane_id
+                                        FROM planes
+                                        WHERE cargo_flg = 0)
+        AND 
+        f.quantity > 30
+        AND
+        p.age > 45;
+
+
+
+
+
+
+Задача 3. Выведите ТОП 10 пилотов-капитанов (first_pilot_id), которые совершили наибольшее число грузовых перелетов в этом году
+
+
+SELECT p.name
+FROM flights as f
+LEFT JOIN
+        pilots as p
+        ON f.first_pilot_id = p.pilot_id
+WHERE 
+        f.plane_id IN (SELECT plane_id
+                                   FROM planes
+                                   WHERE cargo_flg = 1)
+        AND 
+        EXTRACT(YEAR FROM f.flight_dt) = 2022
+GROUP BY p.name
+ORDER BY COUNT(*) DESC
+LIMIT 10;
